@@ -107,6 +107,15 @@ function App() {
     setCurrentState(STATES.ANALYZING_CV);
 
     try {
+      if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      await fetch("https://your-render-url.onrender.com/upload", {
+        method: "POST",
+        body: formData,
+      });
+    }
       const response = await processCV(file);
       if (!response?.data?.length) {
         throw new Error('We could not parse enough profile data from that file. Try a different CV format.');
