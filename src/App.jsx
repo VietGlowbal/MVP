@@ -111,7 +111,7 @@ function App() {
       const formData = new FormData();
       formData.append("file", file);
 
-      await fetch("https://your-render-url.onrender.com/upload", {
+      await fetch("https://mvp-2-ozsr.onrender.com/upload", {
         method: "POST",
         body: formData,
       });
