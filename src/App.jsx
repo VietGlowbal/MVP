@@ -25,6 +25,8 @@ const NAV_PAGES = {
   AI: 'AI'
 };
 
+const uploadApiUrl = import.meta.env.VITE_UPLOAD_API_URL;
+
 function App() {
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const isCreatorMode = query.get('app') === '1';
@@ -45,7 +47,6 @@ function App() {
   const [results, setResults] = useState(null);
   const [profileContext, setProfileContext] = useState(null);
 
-  /* ── scroll-to-section after page switch ── */
   useEffect(() => {
     if (scrollTarget && activePage === NAV_PAGES.HOME) {
       const timer = setTimeout(() => {
@@ -56,7 +57,6 @@ function App() {
     }
   }, [scrollTarget, activePage]);
 
-  /* ── highlight nav when section is in view ── */
   useEffect(() => {
     if (activePage !== NAV_PAGES.HOME) {
       setActiveSection(null);
@@ -97,6 +97,31 @@ function App() {
     }
   }, [activePage]);
 
+  const uploadCvFile = useCallback(async (file) => {
+    if (!file || !uploadApiUrl) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(uploadApiUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let detail = 'Upload failed';
+      try {
+        const payload = await response.json();
+        detail = payload?.error || payload?.detail || detail;
+      } catch {
+        // ignore JSON parsing failure and use fallback detail
+      }
+      throw new Error(detail);
+    }
+  }, []);
+
   const handleCVUpload = async (file) => {
     trackEvent('upload_start', { fileName: file?.name || 'unknown' });
     setErrorMessage('');
@@ -108,14 +133,13 @@ function App() {
 
     try {
       if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
+        try {
+          await uploadCvFile(file);
+        } catch (uploadError) {
+          console.warn('CV upload API failed, continuing local parsing', uploadError);
+        }
+      }
 
-      await fetch("https://mvp-2-ozsr.onrender.com/upload", {
-        method: "POST",
-        body: formData,
-      });
-    }
       const response = await processCV(file);
       if (!response?.data?.length) {
         throw new Error('We could not parse enough profile data from that file. Try a different CV format.');
@@ -257,7 +281,6 @@ function App() {
     </>
   );
 
-  /* ── Nav items matching wireframe ── */
   const navItems = [
     { type: 'page', key: NAV_PAGES.MATCH, label: 'Glowbal AI', icon: Sparkles },
     { type: 'scroll', target: 'waitlist', label: 'Book 1-1 Session', icon: CalendarClock },

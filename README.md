@@ -2,14 +2,30 @@
 
 Glowbal shortlist creator + lead capture funnel.
 
-## Frontend env
-Set this in the frontend deploy (GitHub Pages build env or local `.env`):
+## Recommended deployment architecture
 
-- `VITE_SIGNUP_API_URL=https://<your-render-service>.onrender.com/api/signup`
+### Frontend
+- Host the Vite frontend on GitHub Pages
 
-When set, landing page signups are forwarded to the Render mail relay, which:
-1) stores leads
-2) sends welcome email from Purelymail
+### Mail relay
+- Host `mail-relay/` on Render
+- Handles landing signups, welcome emails, and admin lead access
+
+### Upload API
+- Host `api/` on Render
+- Stores uploaded CV files in AWS S3
+
+### AWS
+- Use S3 for uploaded file storage
+
+## Frontend environment variables
+Set these in the frontend deploy or local `.env`:
+
+- `VITE_SIGNUP_API_URL=https://<your-render-mail-relay>.onrender.com/api/signup`
+- `VITE_UPLOAD_API_URL=https://<your-render-upload-api>.onrender.com/upload`
 
 ## Mail relay
 See `mail-relay/README.md` for Render deploy and SMTP env setup.
+
+## Upload API
+See `api/README.md` for Render and AWS S3 setup.
